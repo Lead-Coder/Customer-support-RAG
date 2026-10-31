@@ -26,7 +26,7 @@ for item in st.session_state.history:
                 st.write(source.get("passage", ""))
 
 with st.expander("Try a sample question"):
-    samples = ["How can I request a refund?", "How do I check my invoice or receipt?",
+    samples = ["How do I cancel my order?", "How can I change my shipping address?",
                "What should I do if my payment was charged twice?", "What is the return policy?"]
     cols = st.columns(2)
     for i, sample in enumerate(samples):
