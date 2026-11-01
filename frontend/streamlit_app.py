@@ -10,6 +10,13 @@ st.caption("Answers use a static FAQ knowledge base. This assistant cannot acces
 
 if "history" not in st.session_state:
     st.session_state.history = []
+if "question_input" not in st.session_state:
+    st.session_state.question_input = ""
+
+# Clear only after a successful request. Clearing a Streamlit form immediately
+# on submit can make the returned input value appear empty on some versions.
+if st.session_state.pop("clear_question_input", False):
+    st.session_state.question_input = ""
 
 for item in st.session_state.history:
     with st.chat_message("user"):
@@ -27,14 +34,18 @@ for item in st.session_state.history:
 
 with st.expander("Try a sample question"):
     samples = ["How do I cancel my order?", "How can I change my shipping address?",
-               "What should I do if my payment was charged twice?", "What is the return policy?"]
+               "What should I do if my payment was charged twice?", "How can I track my order?"]
     cols = st.columns(2)
     for i, sample in enumerate(samples):
         if cols[i % 2].button(sample, key=f"sample_{i}"):
-            st.session_state.pending_question = sample
+            st.session_state.question_input = sample
 
-with st.form("ask_form", clear_on_submit=True):
-    question = st.text_input("How can we help?", max_chars=1000, value=st.session_state.pop("pending_question", ""))
+with st.form("ask_form", clear_on_submit=False):
+    question = st.text_input(
+        "How can we help?",
+        max_chars=1000,
+        key="question_input",
+    )
     submitted = st.form_submit_button("Send")
 
 if submitted:
@@ -54,6 +65,7 @@ if submitted:
             else:
                 result = response.json()
                 st.session_state.history.append({"question": question.strip(), **result})
+                st.session_state.clear_question_input = True
                 st.rerun()
         except requests.RequestException:
             st.error(f"Can't reach the API at {API_URL}. Start FastAPI and try again.")
